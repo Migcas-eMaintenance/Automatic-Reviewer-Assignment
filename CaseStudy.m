@@ -39,14 +39,14 @@ V=((W*W')*W)==0;
 
 %% 3.- Runs an optimization scheme to assign reviewers
 % Call to the assignreviewers function which runs convex RAP-OPER
-[PaperOrder,Q,Qhist]=OPEAconvex(W,P,V);
+[PaperOrder,Q,Qhist]=OPEA_CES(W,P,V);
 % Alternatively you can use the greedy RAP-OPER as baseline
 %[PaperOrder,Q,Qhist]=OPEAgreedy(W,P,V);
 
 % If you want to assign more than one paper to each reviewer, you can call
-% the OPEAconvex function with an extra input argument, e.g.: 
-%[PaperOrder,Q,Qhist]=OPEAconvex(W,P,V,2); % to assign 2 papers per reviewer
-%[PaperOrder,Q,Qhist]=OPEAconvex(W,P,V,3); % to assign 3 papers per reviewer
+% the OPEA_CES function with an extra input argument, e.g.: 
+%[PaperOrder,Q,Qhist]=OPEA_CES(W,P,V,2); % to assign 2 papers per reviewer
+%[PaperOrder,Q,Qhist]=OPEA_CES(W,P,V,3); % to assign 3 papers per reviewer
 
 
 
