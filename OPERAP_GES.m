@@ -1,13 +1,10 @@
-function [Paperorder,Q,Qhist]=OPEAgreedy(W,P,V)
+function [Paperorder,Q,Qhist]=OPERAP_GES(E,V)
 % assigngreedy allocates reviewers to papers based on keywords and using a
 % greedy algorithm
 %
 % [PaperOrder,Q,Qhist]=assignreviewers(W,P,V) returns a set of indexes
 % named PaperOrder, such that PaperORder(i) is the index of the paper
 % assigned to reviewer i.
-%
-% [PaperOrder,Q,Qhist]=assignreviewers(W,P,V,npapers) assigns the number
-% of papers "npapers" to each reviewer.
 %
 % The inputs to the function are:
 %   - W: Authorship matrix. If the j-th author is an author of the i-th
@@ -20,8 +17,8 @@ function [Paperorder,Q,Qhist]=OPEAgreedy(W,P,V)
 %   - author: cell array with the names of all the authors
 %
 % The ourpurs of the function are:
-%   - PaperOrder is a set of indexes such that PaperORder(:,i) are the
-%       indexes of the paper assigned to i-th author for reviewing.
+%   - PaperOrder is a set of indexes such that PaperORder(j) is the index
+%      of the paper assigned to i-th author for reviewing.
 %   - Q is the quality index of the assignment. Q is the total number of
 %       times that the authors have used keywords in their own submissions
 %       which are also present in the paper they were assigned to review.
@@ -43,20 +40,18 @@ function [Paperorder,Q,Qhist]=OPEAgreedy(W,P,V)
 %   Matrix "A". PaperOrder(i) is the column index in row i where a 1 is
 %   located. In other words: A(i,PaperOrder(i))=1.
 %
-%  v1.0  May 2020. Miguel Castano Arranz, miguel.castano@ltu.se
+%  v2.0  Septeember 2020. Miguel Castano Arranz, miguel.castano@ltu.se
 %                 Department of Operation and Maintenance,
 %                 Lulea University, Sweden
 
-% K: Author's Keyword Expertise Matrix
-K=P'*W;
 
 % C: Cost matrix
-C=P*K;
+C=E;
 % Set to -infinity the cost to assign a vetoed reviewer to a paper
 C(V==0)=-Inf;
 % Vertical replication of the cost matrix C until there are more papers
 % than authors
-C=kron( C,ones(ceil(size(C,2)/size(C,1)),1) );
+C=kron( ones(ceil(size(C,2)/size(C,1)),1),C );
 
 % Prelocation of assingment solution
 Paperorder=zeros(1,size(C,2));
@@ -68,34 +63,39 @@ Q=0;
 %   2) Substitute by -infinity all the costs in the row and column
 %   associated to the assigned paper and reviewer respectively. 
 for ct=1:size(C,2)
+    % x,y is the index assigned in this iteration and associated to the
+    % larger cost 
      value=max(max(C));
      [x,y]=find(C==value);
+     % since there can be more than one possible maximum "value" at each
+     % stage, we take a random one using the variable "index"
      ind=randperm(length(x));
-    Paperorder(y(ind(1)))=x(ind(1)); 
-    Q=Q+C(x(ind(1)),y(ind(1)));
-    nkeywords=C(x(ind(1)),y(ind(1)));
+     x=x(ind(1));y=y(ind(1));
+     Paperorder(y)=x; 
+    Q=Q+C(x,y);
+    nkeywords=C(x,y);
    try
     Qhist(nkeywords+1)=Qhist(nkeywords+1)+1; %#ok<AGROW>
    catch
         try 
      Qhist(nkeywords+1)=1;      %#ok<AGROW>
         catch
-          Paperorder=-1*ones(1,size(W,2));
+          Paperorder=-1*ones(1,size(C,2));
           Q=-1;
           Qhist=-1;
           return
         end
    end
-   C(x(ind(1)),:)=-Inf;
-    C(:,y(ind(1)))=-Inf;
+   C(x,:)=-Inf;
+    C(:,y)=-Inf;
 end
 
 still=1;
 while still
     still=0;
     for ct=1:length(Paperorder)
-        if Paperorder(ct)>size(W,1)
-            Paperorder(ct)=Paperorder(ct)-size(W,1);
+        if Paperorder(ct)>size(E,1)
+            Paperorder(ct)=Paperorder(ct)-size(E,1);
             still=1;
         end
     end

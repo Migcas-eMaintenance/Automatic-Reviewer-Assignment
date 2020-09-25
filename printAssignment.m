@@ -20,7 +20,7 @@ function printAssignment(author,papernames,kwname,W,P,PaperForAuthor,fname)
 %
 %  v1.0  May 2020. Miguel Casta?o Arranz, miguel.castano@ltu.se
 %                 Department of Operation and Maintenance, 
-%                 Lule? University, Sweden 
+%                 Lulea University, Sweden 
 %  printoptions.author='index' prints the index of the author instead of
 %  the name. 
 %  

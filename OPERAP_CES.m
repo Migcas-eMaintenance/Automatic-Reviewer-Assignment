@@ -1,24 +1,13 @@
-function [PaperOrder,Q,Qhist]=OPEA_CES(W,P,V,varargin)
-% assignreviewers allocates reviewers to papers based on keywords using the
-% OPEA-CES method
+function [PaperOrder,Q,Qhist]=OPERAP_CES(E,V,varargin)
+% [PaperOrder,Q,Qhist]=OPERAP_CES(E,V)  allocates reviewers to papers based
+% based on the Expertise Matrix E and Veto Matrix V. The allocation is
+% performed by the Expert System introduced in SEction 4 in [1].
 %
-% [PaperOrder,Q,Qhist]=OPEA_CES(W,P,V) returns a set of indexes
-% named PaperOrder, such that PaperORder(i) is the index of the paper
-% assigned to reviewer i.
-%
-% [PaperOrder,Q,Qhist]=OPEA_CES(W,P,V,npapers) assigns the number
-% of papers "npapers" to each reviewer.
-%
-% The inputs to the function are:
-%   - W: Authorship matrix. If the j-th author is an author of the i-th
-%       paper, then W(i,j)=1. Otherwise W(i,j)=0.
-%   - P: Keyword/Paper Matrix. Binary matrix such that P(i,j)= 1 if
-%       the j-th kweyword is present in the i-th paper. P(i,j)=0 otherwise.
-%   - V: Veto Matrix. If V(i,j)=0 then the j-th author is vetoed to review
-%   the i-th paper. This can be used for example to reflect conflicts of
-%   interest. 
-%   - author: cell array with the names of all the authors
-%   - npapers: number of papers to assign to reviewers (default 1)
+% The inputs are: 
+%   - E. Expertise matrix where E(i,j) quantifies the expertise of 
+% reviewer j in the domain of the paper i. 
+%   - V is a binary Veto matris such that if V(i,j)=1 then reviewer j is
+% not allowed to review paper i.  
 %
 % The ourpurs of the function are:
 %   - PaperOrder is a set of indexes such that PaperORder(:,i) are the
@@ -39,43 +28,42 @@ function [PaperOrder,Q,Qhist]=OPEA_CES(W,P,V,varargin)
 %       his/her own publications a word which is also present in the paper
 %       they have been assigned to revie.
 %
-%   Note: in the paper "Automatic assignment of reviewers in  peer reviewed
-%   conferences" the assignment solution is given in terms of a binary
-%   Matrix "A". PaperOrder(i) is the column index in row i where a 1 is
-%   located. In other words: A(i,PaperOrder(i))=1.
+%   [PaperOrder,Q,Qhist]=OPERAP_CES(E,V,Npaper) assigns Npapers to each 
+%   reviewer. 
 %
-%  v1.0  May 2020. Miguel Castano Arranz, miguel.castano@ltu.se
-%                 Department of Operation and Maintenance,
-%                 Lulea University, Sweden
+%   Note: in the paper [1]. the assignment solution is given in terms of a
+%   binary Matrix "A". PaperOrder(i) is the column index in row i where a 1 
+%   is located. In other words: A(i,PaperOrder(i))=1.
+%
+%  v2.0  September 2020. Miguel Castano Arranz, miguel.castano@ltu.se
+%                        Department of Operation and Maintenance,
+%                        Lulea University, Sweden
+%  [1]: "Automatic assignment of reviewers in peer reviewed conferences",
+% subbmitted to Epert Systems (September 2020)
 
-% Author's Keyword Expertise Matrix
-K=P'*W;
-
-% Author's Paper Expertise Matrix
-E=P*K;
 
 % Cost matrix for minimization obtained by combining negative E and adding
 % Infinity cost to the vetoed reviews represented in V
 C=-E;
 C(V==0)=Inf;
-
 E(V==0)=0;
 
 % Obtain from the inputs the number of papers which will be assigned to
 % each reviewer
-if nargin==3
+if nargin==2
     npapers=1;
-elseif nargin==4
+elseif nargin==3
     npapers=varargin{1};
 end
 
 
-% loop to resolve OPEA-CES as many times as the number of papers assigned
-% to each reviewer. The veto matrix is changed between iterations in order
-% to prevent papers to be assigned twice to the same reviewer. 
+% loop to resolve the OPERAP-CES (see Section 4.1 in {1]) as many times as
+% the number of papers assigned to each reviewer. The veto matrix is 
+% changed between iterations in order to prevent papers to be assigned 
+% twice to the same reviewer (see Section 6.2 in [1]). 
 for n=1:npapers
-    % index to randomize the order of the author set
-    authorRandIndx=randperm(size(W,2)); 
+   % index to randomize the order of the author set
+    authorRandIndx=randperm(size(E,2)); 
    % binary flag to indicate that more authors have to be assigned by 
    % resolving more Assignment Problems (APs)
     moreauthors=1;   
@@ -98,7 +86,6 @@ for n=1:npapers
                 hungarian(C(:,authorRandIndx(startauthors:startauthors+m-1))); %#ok<AGROW>
             startauthors=startauthors+m;
             nauthorsleft=size(C,2)-startauthors+1;
-            
             % if there are less authors(left) than papers, we have to
             % create "dummy" authors by padding columns on the cost matrix
             % with 0's until the cost matrix is square
@@ -116,7 +103,7 @@ for n=1:npapers
         ctproblems=ctproblems+1;
     end
     
-    % Csol is the for each column, the selected row. That is, for each author,
+    % Csol is or each column, the selected row. That is, for each author,
     % the selected paper.
     
     PaperForAuthoraux=[];

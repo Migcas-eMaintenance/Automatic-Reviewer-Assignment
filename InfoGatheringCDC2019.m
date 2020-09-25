@@ -1,4 +1,9 @@
-%% Script for parsing the program from the conference CDC2019
+%% Script for Information Gathering (see Section 2.1 in [1]) by parsing 
+% the program from the conference CDC2019
+%
+% [1]: "Automatic assignment of reviewers in peer reviewed conferences",
+% subbmitted to Epert Systems (May2020)
+%
 % The script is divided in two parts. Part 1 parses the Author Index and
 % Part 2 parses the Paper Index. 
 
